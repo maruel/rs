@@ -14,13 +14,13 @@ import (
 )
 
 func ExampleNewEncode() {
-  data := []byte("hello, world")
+	data := []byte("hello, world")
 	fmt.Printf("Original data: %s\n", data)
-  ecc := make([]byte, 2)
-  e := NewEncoder(QR_CODE_FIELD_256, len(ecc))
+	ecc := make([]byte, 2)
+	e := NewEncoder(QR_CODE_FIELD_256, len(ecc))
 	e.Encode(data, ecc)
 	fmt.Printf("ECC bytes: %v\n", ecc)
-  // Output:
+	// Output:
 	// Original data: hello, world
 	// ECC bytes: [171 167]
 }
@@ -34,7 +34,7 @@ func ExampleNewDecode() {
 		fmt.Printf("Expected 1 fix, for %d. Error: %s\n", nb, err)
 	}
 	fmt.Printf("Fixed data: %s\n", data)
-  // Output:
+	// Output:
 	// Corrupted data: hello, wXrld
 	// Fixed data: hello, world
 }
