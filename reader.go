@@ -22,7 +22,7 @@ type rSReader struct {
 	dataLen, eccLen int
 	d               Decoder
 	r               io.Reader
-	block           []byte
+	block, rest     []byte
 	corr            int64 //corrected byte count
 }
 
@@ -33,26 +33,43 @@ func NewReader(r io.Reader, c int) io.Reader {
 		eccLen:  c,
 		d:       NewDecoder(QR_CODE_FIELD_256),
 		r:       r,
-		block:   make([]byte, maxDataLen+c)}
+		block:   make([]byte, maxDataLen),
+	}
 }
 
 func (rdr *rSReader) Read(p []byte) (int, error) {
-	dataLen := rdr.dataLen
-	rdr.block = rdr.block[:cap(rdr.block)]
-	n, err := io.ReadFull(rdr.r, rdr.block)
-	if err != nil {
-		if err != io.EOF {
-			return n, err
+	if len(rdr.rest) == 0 {
+		// decode next block
+		dataLen := rdr.dataLen
+		rdr.block = rdr.block[:cap(rdr.block)]
+		n, err := io.ReadFull(rdr.r, rdr.block)
+		if err != nil {
+			if err != io.EOF && err != io.ErrUnexpectedEOF {
+				return n, err
+			}
+			if n == 0 {
+				return 0, io.EOF
+			}
+			// padding: move ecc code to the and and fill with zeroes inbetween
+			copy(rdr.block[dataLen:], rdr.block[n-rdr.eccLen:])
+			for i := n; i < dataLen; i++ {
+				rdr.block[i] = 0
+			}
 		}
-		// padding: move ecc code to the and and fill with zeroes inbetween
-		copy(rdr.block[dataLen:], rdr.block[n-rdr.eccLen:])
-		for i := n; i < dataLen; i++ {
-			rdr.block[i] = 0
+		corr, err := rdr.d.Decode(rdr.block[:dataLen], rdr.block[dataLen:])
+		if corr > 0 {
+			rdr.corr += int64(corr)
 		}
+		rdr.rest = rdr.block[:n-rdr.eccLen]
 	}
-	corr, err := rdr.d.Decode(rdr.block[:dataLen], rdr.block[dataLen:])
-	if corr > 0 {
-		rdr.corr += int64(corr)
+	if len(rdr.rest) > 0 {
+		n := len(p)
+		if n > len(rdr.rest) {
+			n = len(rdr.rest)
+		}
+		copy(p, rdr.rest[:n])
+		rdr.rest = rdr.rest[n:]
+		return n, nil
 	}
-	return n, err
+	return 0, io.EOF
 }

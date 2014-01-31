@@ -29,7 +29,7 @@ type rSWriter struct {
 }
 
 // NewWriter returns a new writer with c ECC-length
-func NewWriter(w io.Writer, c int) io.Writer {
+func NewWriter(w io.Writer, c int) io.WriteCloser {
 	return &rSWriter{
 		dataLen: maxDataLen - c,
 		eccLen:  c,
@@ -40,41 +40,66 @@ func NewWriter(w io.Writer, c int) io.Writer {
 }
 
 func (wr *rSWriter) Write(p []byte) (int, error) {
+	lenp := len(p)
 	dataLen := wr.dataLen
 	if len(p)+len(wr.rest) < dataLen {
 		wr.rest = append(wr.rest, p...)
-		return 0, nil
+		return lenp, nil
 	}
 
-	n := 0
+	// send rest
+	ecc := make([]byte, wr.eccLen)
+	for i := len(wr.rest); i >= dataLen; i = len(wr.rest) {
+		if _, err := wr.w.Write(wr.rest); err != nil {
+			return lenp, err
+		}
+		wr.e.Encode(wr.rest[:dataLen], ecc)
+		if _, err := wr.w.Write(ecc); err != nil {
+			return lenp, err
+		}
+		wr.rest = wr.rest[dataLen:]
+	}
+
+	// send rest of rest plus begin of p
 	i := len(wr.rest)
 	if i > 0 {
 		copy(wr.block, wr.rest)
 		wr.rest = wr.rest[:0]
+		k := dataLen - (len(p) + i)
+		if k > 0 {
+			wr.rest = append(wr.rest, p...)
+			return lenp, nil
+		}
+		copy(wr.block[i:], p[:dataLen-i])
+		wr.e.Encode(wr.block[:dataLen], wr.block[dataLen:])
+		if _, err := wr.w.Write(wr.block); err != nil {
+			return lenp, err
+		}
+		p = p[dataLen-i:]
 	}
 
-	k := dataLen - (len(p) + i)
-	for k > 0 {
-		copy(wr.block[i:], p[:k])
-		p = p[k:]
-		i, k = 0, dataLen-len(p)
-		wr.e.Encode(wr.block[:dataLen], wr.block[dataLen:])
-		if m, err := wr.w.Write(wr.block); err != nil {
-			return m, err
+	// walk on p
+	for i := len(p); i >= dataLen; i = len(p) {
+		if _, err := wr.w.Write(p[:dataLen]); err != nil {
+			return lenp, err
 		}
-		n += dataLen
+		wr.e.Encode(p[:dataLen], ecc)
+		if _, err := wr.w.Write(ecc); err != nil {
+			return lenp, err
+		}
+		p = p[dataLen:]
 	}
 
 	if len(p) > 0 {
 		wr.rest = append(wr.rest, p...)
 	}
-	return n, nil
+	return lenp, nil
 }
 
-func (wr *rSWriter) Flush() (int, error) {
+func (wr *rSWriter) Flush() error {
 	n := len(wr.rest)
 	if n == 0 {
-		return 0, nil
+		return nil
 	}
 	copy(wr.block, wr.rest)
 	dataLen := wr.dataLen
@@ -86,10 +111,10 @@ func (wr *rSWriter) Flush() (int, error) {
 	wr.rest = wr.rest[:0]
 	// don't transmit means cut
 	copy(wr.block[n:], wr.block[dataLen:])
-	return wr.w.Write(wr.block[:n+wr.eccLen])
+	_, err := wr.w.Write(wr.block[:n+wr.eccLen])
+	return err
 }
 
 func (wr *rSWriter) Close() error {
-	_, err := wr.Flush()
-	return err
+	return wr.Flush()
 }
