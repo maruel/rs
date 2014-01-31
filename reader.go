@@ -1,0 +1,58 @@
+/*
+Copyright 2014 Tamás Gulácsi.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+
+You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0. Unless required by applicable law
+or agreed to in writing, software distributed under the License is
+distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied. See the License for the specific language governing
+permissions and limitations under the License.
+*/
+
+package rs
+
+import (
+	"io"
+)
+
+type rSReader struct {
+	dataLen, eccLen int
+	d               Decoder
+	r               io.Reader
+	block           []byte
+	corr            int64 //corrected byte count
+}
+
+// NewReader returns a reader correcting on-the-fly
+func NewReader(r io.Reader, c int) io.Reader {
+	return &rSReader{
+		dataLen: maxDataLen - c,
+		eccLen:  c,
+		d:       NewDecoder(QR_CODE_FIELD_256),
+		r:       r,
+		block:   make([]byte, maxDataLen+c)}
+}
+
+func (rdr *rSReader) Read(p []byte) (int, error) {
+	dataLen := rdr.dataLen
+	rdr.block = rdr.block[:cap(rdr.block)]
+	n, err := io.ReadFull(rdr.r, rdr.block)
+	if err != nil {
+		if err != io.EOF {
+			return n, err
+		}
+		// padding: move ecc code to the and and fill with zeroes inbetween
+		copy(rdr.block[dataLen:], rdr.block[n-rdr.eccLen:])
+		for i := n; i < dataLen; i++ {
+			rdr.block[i] = 0
+		}
+	}
+	corr, err := rdr.d.Decode(rdr.block[:dataLen], rdr.block[dataLen:])
+	if corr > 0 {
+		rdr.corr += int64(corr)
+	}
+	return n, err
+}
