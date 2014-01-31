@@ -36,7 +36,7 @@ func TestReadWrite(t *testing.T) {
 
 	for i := 0; i < rounds && i < len(randBytes); i++ {
 		encrypted := bytes.NewBuffer(nil)
-		wr := NewWriter(encrypted, eccLen)
+		wr := NewWriter(encrypted, QR_CODE_FIELD_256, eccLen)
 		hsh := sha1.New()
 		var written int64
 
@@ -62,7 +62,7 @@ func TestReadWrite(t *testing.T) {
 		t.Logf("written %d raw bytes, %d encrypted, hash is %x", written, encrypted.Len(), origHash)
 
 		hsh = sha1.New()
-		rdr := NewReader(bytes.NewReader(encrypted.Bytes()), eccLen)
+		rdr := NewReader(bytes.NewReader(encrypted.Bytes()), QR_CODE_FIELD_256, eccLen)
 		read, err := io.Copy(hsh, rdr)
 		if err != nil {
 			t.Errorf("error reading: %v", err)

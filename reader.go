@@ -27,11 +27,11 @@ type rSReader struct {
 }
 
 // NewReader returns a reader correcting on-the-fly
-func NewReader(r io.Reader, c int) io.Reader {
+func NewReader(r io.Reader, f *Field, c int) io.Reader {
 	return &rSReader{
 		dataLen: maxDataLen - c,
 		eccLen:  c,
-		d:       NewDecoder(QR_CODE_FIELD_256),
+		d:       NewDecoder(f),
 		r:       r,
 		block:   make([]byte, maxDataLen),
 	}

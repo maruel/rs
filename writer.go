@@ -28,12 +28,12 @@ type rSWriter struct {
 	rest            []byte
 }
 
-// NewWriter returns a new writer with c ECC-length
-func NewWriter(w io.Writer, c int) io.WriteCloser {
+// NewWriter returns a new writer with f field and c ECC-length
+func NewWriter(w io.Writer, f *Field, c int) io.WriteCloser {
 	return &rSWriter{
 		dataLen: maxDataLen - c,
 		eccLen:  c,
-		e:       NewEncoder(QR_CODE_FIELD_256, c),
+		e:       NewEncoder(f, c),
 		w:       w,
 		block:   make([]byte, maxDataLen),
 		rest:    make([]byte, 0, maxDataLen-c)}
