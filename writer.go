@@ -28,15 +28,24 @@ type rSWriter struct {
 	rest            []byte
 }
 
-// NewWriter returns a new writer with f field and c ECC-length
-func NewWriter(w io.Writer, f *Field, c int) io.WriteCloser {
+// NewInterleavedWriter returns a new writer with f field and c ECC-length.
+//
+// The returned writer is interleaving data with ECC codes:
+// writes data in maxDataLen blocks, where
+// each block starts with maxDataLen-c bytes of data, then
+// comes c bytes of error correction code.
+func NewInterleavedWriter(w io.Writer, f *Field, c int) (io.WriteCloser, error) {
+	if _, err := writeHeader(w, f, c); err != nil {
+		return nil, err
+	}
 	return &rSWriter{
 		dataLen: maxDataLen - c,
 		eccLen:  c,
 		e:       NewEncoder(f, c),
 		w:       w,
 		block:   make([]byte, maxDataLen),
-		rest:    make([]byte, 0, maxDataLen-c)}
+		rest:    make([]byte, 0, maxDataLen-c),
+	}, nil
 }
 
 func (wr *rSWriter) Write(p []byte) (int, error) {
@@ -96,7 +105,8 @@ func (wr *rSWriter) Write(p []byte) (int, error) {
 	return lenp, nil
 }
 
-func (wr *rSWriter) Flush() error {
+// Close closes the writer and flushes internal buffers.
+func (wr *rSWriter) Close() error {
 	n := len(wr.rest)
 	if n == 0 {
 		return nil
@@ -113,8 +123,4 @@ func (wr *rSWriter) Flush() error {
 	copy(wr.block[n:], wr.block[dataLen:])
 	_, err := wr.w.Write(wr.block[:n+wr.eccLen])
 	return err
-}
-
-func (wr *rSWriter) Close() error {
-	return wr.Flush()
 }

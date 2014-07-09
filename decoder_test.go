@@ -99,7 +99,7 @@ func TestTooManyErrors(t *testing.T) {
 	if nb, err := d.Decode(complete[:len(QR_CODE_TEST_DATA)], complete[len(QR_CODE_TEST_DATA):]); err == nil {
 		t.Fatal("Recovered unrecoverable error!?!")
 	} else if nb != 0 {
-		t.Fatal("Err != %d", nb)
+		t.Fatalf("Err != %d", nb)
 	}
 }
 

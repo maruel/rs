@@ -19,7 +19,7 @@ import (
 // x^8 + x^4 + x^3 + x^2 + 1
 var QR_CODE_FIELD_256 = NewField(0x11D, 2)
 
-// Wrapper to gf256.Field so the type doesn't leak in.
+// Field is a wrapper to gf256.Field so the type doesn't leak in.
 type Field struct {
 	f *gf256.Field
 }

@@ -26,8 +26,19 @@ type rSReader struct {
 	corr            int64 //corrected byte count
 }
 
-// NewReader returns a reader correcting on-the-fly
-func NewReader(r io.Reader, f *Field, c int) io.Reader {
+// NewInterleavedReader returns a reader correcting on-the-fly.
+//
+// This reads the field and the c parameter from the data header.
+func NewInterleavedReader(r io.Reader) (io.Reader, error) {
+	f, c, err := readHeader(r)
+	if err != nil {
+		return nil, err
+	}
+	return NewInterleavedReaderField(r, f, c), nil
+}
+
+// NewInterleavedReaderField returns a reader correcting on-the-fly
+func NewInterleavedReaderField(r io.Reader, f *Field, c int) io.Reader {
 	return &rSReader{
 		dataLen: maxDataLen - c,
 		eccLen:  c,

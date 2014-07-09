@@ -36,7 +36,12 @@ func TestReadWrite(t *testing.T) {
 
 	for i := 0; i < rounds && i < len(randBytes); i++ {
 		encrypted := bytes.NewBuffer(nil)
-		wr := NewWriter(encrypted, QR_CODE_FIELD_256, eccLen)
+		wr, err := NewInterleavedWriter(encrypted, QR_CODE_FIELD_256, eccLen)
+		if err != nil {
+			t.Errorf("NewInterleavedWriter: %v", err)
+		}
+		t.Logf("header: %s", encrypted.String())
+		headerLen := encrypted.Len()
 		hsh := sha1.New()
 		var written int64
 
@@ -59,10 +64,16 @@ func TestReadWrite(t *testing.T) {
 
 		// check
 		origHash := hsh.Sum(nil)
-		t.Logf("written %d raw bytes, %d encrypted, hash is %x", written, encrypted.Len(), origHash)
+		t.Logf("written %d raw bytes, %d header, %d encrypted, hash is %x",
+			written, headerLen, encrypted.Len()-headerLen, origHash)
 
 		hsh = sha1.New()
-		rdr := NewReader(bytes.NewReader(encrypted.Bytes()), QR_CODE_FIELD_256, eccLen)
+		// FIXME(tgulacsi): we should test NewInterleavedReader here, but I don't know
+		// how to get poly and alpha from a *Field, so header is useless ATM.
+		rdr := NewInterleavedReaderField(
+			bytes.NewReader(encrypted.Bytes()[headerLen:]),
+			QR_CODE_FIELD_256, eccLen,
+		)
 		read, err := io.Copy(hsh, rdr)
 		if err != nil {
 			t.Errorf("error reading: %v", err)
