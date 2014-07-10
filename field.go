@@ -32,19 +32,28 @@ func NewField(poly int, α byte) *Field {
 
 func (f Field) GetPolyAlpha() (poly int, α byte) {
 	α = f.f.Exp(1)
-	alpha := int(α)
-	x := alpha
-	for i := 2; i < 255; i++ {
-		x *= alpha
-		y := int(f.f.Exp(i))
-		if x <= y {
+	for p := 0x100; p < 0x200; p++ {
+		g := newField(p, α)
+		if g == nil {
 			continue
 		}
-		for poly = 0x100; poly < 0x200; poly++ {
-			if poly%x == y {
-				return poly, α
+		ok := true
+		for i := 0; i < 255; i++ {
+			if g.f.Exp(i) != f.f.Exp(i) {
+				ok = false
+				break
 			}
+		}
+		if ok {
+			return p, α
 		}
 	}
 	return
+}
+
+func newField(poly int, α byte) (f *Field) {
+	defer func() {
+		recover()
+	}()
+	return NewField(poly, α)
 }
