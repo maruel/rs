@@ -30,7 +30,7 @@ type rSReader struct {
 //
 // This reads the field and the c parameter from the data header.
 func NewInterleavedReader(r io.Reader) (io.Reader, error) {
-	f, c, err := readHeader(r)
+	r, f, c, err := readHeader(r)
 	if err != nil {
 		return nil, err
 	}

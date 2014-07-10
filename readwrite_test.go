@@ -68,24 +68,32 @@ func TestReadWrite(t *testing.T) {
 			written, headerLen, encrypted.Len()-headerLen, origHash)
 
 		hsh = sha1.New()
-		// FIXME(tgulacsi): we should test NewInterleavedReader here, but I don't know
-		// how to get poly and alpha from a *Field, so header is useless ATM.
-		rdr := NewInterleavedReaderField(
-			bytes.NewReader(encrypted.Bytes()[headerLen:]),
-			QR_CODE_FIELD_256, eccLen,
-		)
-		read, err := io.Copy(hsh, rdr)
+		rdr, err := NewInterleavedReader(bytes.NewReader(encrypted.Bytes()))
 		if err != nil {
-			t.Errorf("error reading: %v", err)
+			t.Errorf("NewInterleavedReader: %v", err)
+			continue
 		}
-		if read != written {
-			t.Errorf("length mismatch: written %d, read %d", written, read)
-		}
+		for j, rdr := range []io.Reader{
+			NewInterleavedReaderField(
+				bytes.NewReader(encrypted.Bytes()[headerLen:]),
+				QR_CODE_FIELD_256, eccLen,
+			),
+			rdr,
+		} {
+			hsh.Reset()
+			read, err := io.Copy(hsh, rdr)
+			if err != nil {
+				t.Errorf("%d: error reading: %v", j, err)
+			}
+			if read != written {
+				t.Errorf("%d: length mismatch: written %d, read %d", j, written, read)
+			}
 
-		readHash := hsh.Sum(nil)
-		t.Logf("read %d bytes, hash is %x", read, readHash)
-		if !bytes.Equal(readHash, origHash) {
-			t.Fatalf("hash mismatch: written %x read %x", origHash, readHash)
+			readHash := hsh.Sum(nil)
+			t.Logf("%d: read %d bytes, hash is %x", j, read, readHash)
+			if !bytes.Equal(readHash, origHash) {
+				t.Fatalf("%d: hash mismatch: written %x read %x", j, origHash, readHash)
+			}
 		}
 	}
 }

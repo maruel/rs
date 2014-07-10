@@ -15,6 +15,7 @@ permissions and limitations under the License.
 package rs
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 )
@@ -24,19 +25,38 @@ type rSHeader struct {
 	Alpha   byte
 }
 
-func readHeader(r io.Reader) (*Field, int, error) {
+func readHeader(r io.Reader) (io.Reader, *Field, int, error) {
 	var hdr rSHeader
-	if err := json.NewDecoder(r).Decode(&hdr); err != nil {
-		return nil, 0, err
+	dec := json.NewDecoder(r)
+	if err := dec.Decode(&hdr); err != nil {
+		return nil, nil, 0, err
 	}
-	return NewField(hdr.Poly, hdr.Alpha), hdr.C, nil
+	b := dec.Buffered()
+	p := make([]byte, 16)
+	f := NewField(hdr.Poly, hdr.Alpha)
+	// strip header-followed linefeeds
+	for {
+		n, err := b.Read(p[:cap(p)])
+		if err != nil {
+			return nil, nil, 0, err
+		}
+		p = p[:n]
+		for i, c := range p {
+			if c == '\n' {
+				continue
+			}
+			p = p[i:]
+			return io.MultiReader(bytes.NewReader(p), b, r), f, hdr.C, nil
+		}
+	}
 }
 
 func writeHeader(w io.Writer, f *Field, c int) (int, error) {
 	cw := &countingWriter{Writer: w}
 
-	// FIXME(tgulacsi): get poly and alpha from *Field
-	err := json.NewEncoder(cw).Encode(rSHeader{Poly: 0, Alpha: 0, C: c})
+	hdr := rSHeader{C: c}
+	hdr.Poly, hdr.Alpha = f.GetPolyAlpha()
+	err := json.NewEncoder(cw).Encode(hdr)
 	return int(cw.n), err
 }
 

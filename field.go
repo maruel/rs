@@ -29,3 +29,22 @@ type Field struct {
 func NewField(poly int, α byte) *Field {
 	return &Field{gf256.NewField(poly, int(α))}
 }
+
+func (f Field) GetPolyAlpha() (poly int, α byte) {
+	α = f.f.Exp(1)
+	alpha := int(α)
+	x := alpha
+	for i := 2; i < 255; i++ {
+		x *= alpha
+		y := int(f.f.Exp(i))
+		if x <= y {
+			continue
+		}
+		for poly = 0x100; poly < 0x200; poly++ {
+			if poly%x == y {
+				return poly, α
+			}
+		}
+	}
+	return
+}
