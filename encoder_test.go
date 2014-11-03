@@ -46,7 +46,7 @@ func compare(t *testing.T, a []byte, b []byte, msg string) {
 // Sample QR Code.
 func BenchmarkEncode16_10(b *testing.B) {
 	b.StopTimer()
-	data := makecopy(RAND_128[:16])
+	data := makecopy(Rand128[:16])
 	ecc := [10]byte{}
 	e := NewEncoder(QRCodeField256, len(ecc))
 	b.SetBytes(int64(len(data) * b.N))
@@ -59,7 +59,7 @@ func BenchmarkEncode16_10(b *testing.B) {
 // 12.5% ECC size.
 func BenchmarkEncode128_16(b *testing.B) {
 	b.StopTimer()
-	data := makecopy(RAND_128)
+	data := makecopy(Rand128)
 	ecc := [16]byte{}
 	e := NewEncoder(QRCodeField256, len(ecc))
 	b.SetBytes(int64(len(data) * b.N))
