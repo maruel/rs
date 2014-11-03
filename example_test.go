@@ -17,7 +17,7 @@ func ExampleNewEncode() {
 	data := []byte("hello, world")
 	fmt.Printf("Original data: %s\n", data)
 	ecc := make([]byte, 2)
-	e := NewEncoder(QR_CODE_FIELD_256, len(ecc))
+	e := NewEncoder(QRCodeField256, len(ecc))
 	e.Encode(data, ecc)
 	fmt.Printf("ECC bytes: %v\n", ecc)
 	// Output:
@@ -29,7 +29,7 @@ func ExampleNewDecode() {
 	data := []byte("hello, wXrld")
 	ecc := []byte{171, 167}
 	fmt.Printf("Corrupted data: %s\n", data)
-	d := NewDecoder(QR_CODE_FIELD_256)
+	d := NewDecoder(QRCodeField256)
 	if nb, err := d.Decode(data, ecc); err != nil || nb != 1 {
 		fmt.Printf("Expected 1 fix, for %d. Error: %s\n", nb, err)
 	}

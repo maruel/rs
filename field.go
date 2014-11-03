@@ -17,7 +17,7 @@ import (
 // information.
 //
 // x^8 + x^4 + x^3 + x^2 + 1
-var QR_CODE_FIELD_256 = NewField(0x11D, 2)
+var QRCodeField256 = NewField(0x11D, 2)
 
 // Field is a wrapper to gf256.Field so the type doesn't leak in.
 type Field struct {
@@ -25,7 +25,7 @@ type Field struct {
 }
 
 // NewField wraps gf256.NewField(). It is safe to use the premade
-// QR_CODE_FIELD_256 all the time.
+// QRCodeField256 all the time.
 func NewField(poly int, α byte) *Field {
 	return &Field{gf256.NewField(poly, int(α))}
 }

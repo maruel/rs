@@ -32,9 +32,9 @@ import (
 
 // Tests example given in ISO 18004, Annex I.
 func TestISO18004Example(t *testing.T) {
-	actualEcc := make([]byte, len(QR_CODE_TEST_ECC))
-	NewEncoder(QR_CODE_FIELD_256, len(QR_CODE_TEST_ECC)).Encode(QR_CODE_TEST_DATA, actualEcc)
-	compare(t, QR_CODE_TEST_ECC, actualEcc, "ECC differs")
+	actualEcc := make([]byte, len(QRCodeTestECC))
+	NewEncoder(QRCodeField256, len(QRCodeTestECC)).Encode(QRCodeTestData, actualEcc)
+	compare(t, QRCodeTestECC, actualEcc, "ECC differs")
 }
 
 func compare(t *testing.T, a []byte, b []byte, msg string) {
@@ -48,7 +48,7 @@ func BenchmarkEncode16_10(b *testing.B) {
 	b.StopTimer()
 	data := makecopy(RAND_128[:16])
 	ecc := [10]byte{}
-	e := NewEncoder(QR_CODE_FIELD_256, len(ecc))
+	e := NewEncoder(QRCodeField256, len(ecc))
 	b.SetBytes(int64(len(data) * b.N))
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -61,7 +61,7 @@ func BenchmarkEncode128_16(b *testing.B) {
 	b.StopTimer()
 	data := makecopy(RAND_128)
 	ecc := [16]byte{}
-	e := NewEncoder(QR_CODE_FIELD_256, len(ecc))
+	e := NewEncoder(QRCodeField256, len(ecc))
 	b.SetBytes(int64(len(data) * b.N))
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {

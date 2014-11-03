@@ -96,7 +96,7 @@ func TestMaxErrors(t *testing.T) {
 func TestTooManyErrors(t *testing.T) {
 	complete := getcomplete()
 	corrupt(complete, QRCodeCorrectable+1)
-	d := NewDecoder(QR_CODE_FIELD_256)
+	d := NewDecoder(QRCodeField256)
 	if nb, err := d.Decode(complete[:len(QRCodeTestData)], complete[len(QRCodeTestData):]); err == nil {
 		t.Fatal("Recovered unrecoverable error!?!")
 	} else if nb != 0 {
@@ -107,7 +107,7 @@ func TestTooManyErrors(t *testing.T) {
 func checkQR(t *testing.T, data, ecc []byte, nbErrors int) {
 	goldenData := QRCodeTestData
 	goldenEcc := QRCodeTestECC
-	d := NewDecoder(QR_CODE_FIELD_256)
+	d := NewDecoder(QRCodeField256)
 	errorsFound, err := d.Decode(data, ecc)
 	if err != nil {
 		t.Fatalf("Got error: %s", err)
@@ -135,7 +135,7 @@ func corrupt(received []byte, howMany int) {
 
 func BenchmarkDecode16_10(b *testing.B) {
 	b.StopTimer()
-	d := NewDecoder(QR_CODE_FIELD_256)
+	d := NewDecoder(QRCodeField256)
 	data := makecopy(QRCodeTestData)
 	ecc := makecopy(QRCodeTestECC)
 	b.SetBytes(int64(len(data) * b.N))
@@ -149,7 +149,7 @@ func BenchmarkDecode16_10(b *testing.B) {
 
 func BenchmarkDecode16_10With1Error(b *testing.B) {
 	b.StopTimer()
-	d := NewDecoder(QR_CODE_FIELD_256)
+	d := NewDecoder(QRCodeField256)
 	data := makecopy(QRCodeTestData)
 	data[1] = data[1] + 1
 	ecc := makecopy(QRCodeTestECC)
@@ -166,9 +166,9 @@ func BenchmarkDecode128_16(b *testing.B) {
 	b.StopTimer()
 	data := makecopy(Rand128)
 	ecc := make([]byte, 16)
-	e := NewEncoder(QR_CODE_FIELD_256, len(ecc))
+	e := NewEncoder(QRCodeField256, len(ecc))
 	e.Encode(data, ecc)
-	d := NewDecoder(QR_CODE_FIELD_256)
+	d := NewDecoder(QRCodeField256)
 	b.SetBytes(int64(len(data) * b.N))
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -182,9 +182,9 @@ func BenchmarkDecode128_16With1Error(b *testing.B) {
 	b.StopTimer()
 	data := makecopy(Rand128)
 	ecc := make([]byte, 16)
-	e := NewEncoder(QR_CODE_FIELD_256, len(ecc))
+	e := NewEncoder(QRCodeField256, len(ecc))
 	e.Encode(data, ecc)
-	d := NewDecoder(QR_CODE_FIELD_256)
+	d := NewDecoder(QRCodeField256)
 	data[1] = data[1] + 1
 	b.SetBytes(int64(len(data) * b.N))
 	b.StartTimer()
@@ -199,9 +199,9 @@ func BenchmarkDecode128_16With2Error(b *testing.B) {
 	b.StopTimer()
 	data := makecopy(Rand128)
 	ecc := make([]byte, 16)
-	e := NewEncoder(QR_CODE_FIELD_256, len(ecc))
+	e := NewEncoder(QRCodeField256, len(ecc))
 	e.Encode(data, ecc)
-	d := NewDecoder(QR_CODE_FIELD_256)
+	d := NewDecoder(QRCodeField256)
 	data[1] = data[1] + 1
 	ecc[1] = ecc[1] + 1
 	b.SetBytes(int64(len(data) * b.N))
