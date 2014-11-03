@@ -7,7 +7,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing permissions and
 limitations under the License. */
 
-// Implements Reed-Solomon error correcting codes.
+// Package rs implements Reed-Solomon error correcting codes.
 //
 // The code was inspired by ZXing's Java implementation but was reduced to only
 // support 256 values space. Source: http://code.google.com/p/zxing/

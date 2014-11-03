@@ -26,18 +26,19 @@ limitations under the License. */
 package rs
 
 import (
-	"github.com/willf/bitset"
 	"math/rand"
 	"testing"
+
+	"github.com/willf/bitset"
 )
 
 // See ISO 18004, Appendix I, from which this example is taken.
-var QR_CODE_TEST_DATA = []byte{0x10, 0x20, 0x0C, 0x56, 0x61, 0x80, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x11}
-var QR_CODE_TEST_ECC = []byte{0xA5, 0x24, 0xD4, 0xC1, 0xED, 0x36, 0xC7, 0x87, 0x2C, 0x55}
-var QR_CODE_CORRECTABLE = len(QR_CODE_TEST_ECC) / 2
+var QRCodeTestData = []byte{0x10, 0x20, 0x0C, 0x56, 0x61, 0x80, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x11, 0xEC, 0x11}
+var QRCodeTestECC = []byte{0xA5, 0x24, 0xD4, 0xC1, 0xED, 0x36, 0xC7, 0x87, 0x2C, 0x55}
+var QRCodeCorrectable = len(QRCodeTestECC) / 2
 
 // 128 pseudo random bytes.
-var RAND_128 = []byte{
+var Rand128 = []byte{
 	0x1b, 0x01, 0xf2, 0xd6, 0x3b, 0x31, 0x2a, 0x87, 0x6c, 0x93, 0x96, 0x11, 0x13, 0x8f, 0x20, 0x06,
 	0x6d, 0x70, 0x26, 0x6e, 0xc2, 0x76, 0xf0, 0xef, 0x9a, 0xda, 0x4d, 0xbe, 0x71, 0xb7, 0x6c, 0xbb,
 	0x4d, 0x0b, 0xc2, 0x27, 0x2a, 0x5b, 0xbf, 0x79, 0xb9, 0xc0, 0xc8, 0xef, 0x24, 0x7c, 0x9d, 0xb3,
@@ -56,31 +57,31 @@ func makecopy(a []byte) []byte {
 
 // Returns the test data and the ECC codes as one slice.
 func getcomplete() []byte {
-	data := make([]byte, len(QR_CODE_TEST_DATA)+len(QR_CODE_TEST_ECC))
-	copy(data, QR_CODE_TEST_DATA)
-	copy(data[len(QR_CODE_TEST_DATA):], QR_CODE_TEST_ECC)
+	data := make([]byte, len(QRCodeTestData)+len(QRCodeTestECC))
+	copy(data, QRCodeTestData)
+	copy(data[len(QRCodeTestData):], QRCodeTestECC)
 	return data
 }
 
 func TestNoError(t *testing.T) {
-	data := makecopy(QR_CODE_TEST_DATA)
-	ecc := makecopy(QR_CODE_TEST_ECC)
+	data := makecopy(QRCodeTestData)
+	ecc := makecopy(QRCodeTestECC)
 	checkQR(t, data, ecc, 0)
 }
 
 func TestOneErrorData(t *testing.T) {
-	for i := 0; i < len(QR_CODE_TEST_DATA); i++ {
-		data := makecopy(QR_CODE_TEST_DATA)
-		ecc := makecopy(QR_CODE_TEST_ECC)
+	for i := 0; i < len(QRCodeTestData); i++ {
+		data := makecopy(QRCodeTestData)
+		ecc := makecopy(QRCodeTestECC)
 		data[i] = data[i] + byte(i+1)
 		checkQR(t, data, ecc, 1)
 	}
 }
 
 func TestOneErrorECC(t *testing.T) {
-	for i := 0; i < len(QR_CODE_TEST_ECC); i++ {
-		data := makecopy(QR_CODE_TEST_DATA)
-		ecc := makecopy(QR_CODE_TEST_ECC)
+	for i := 0; i < len(QRCodeTestECC); i++ {
+		data := makecopy(QRCodeTestData)
+		ecc := makecopy(QRCodeTestECC)
 		ecc[i] = ecc[i] + byte(i+1)
 		checkQR(t, data, ecc, 1)
 	}
@@ -88,24 +89,24 @@ func TestOneErrorECC(t *testing.T) {
 
 func TestMaxErrors(t *testing.T) {
 	complete := getcomplete()
-	corrupt(complete, QR_CODE_CORRECTABLE)
-	checkQR(t, complete[:len(QR_CODE_TEST_DATA)], complete[len(QR_CODE_TEST_DATA):], QR_CODE_CORRECTABLE)
+	corrupt(complete, QRCodeCorrectable)
+	checkQR(t, complete[:len(QRCodeTestData)], complete[len(QRCodeTestData):], QRCodeCorrectable)
 }
 
 func TestTooManyErrors(t *testing.T) {
 	complete := getcomplete()
-	corrupt(complete, QR_CODE_CORRECTABLE+1)
+	corrupt(complete, QRCodeCorrectable+1)
 	d := NewDecoder(QR_CODE_FIELD_256)
-	if nb, err := d.Decode(complete[:len(QR_CODE_TEST_DATA)], complete[len(QR_CODE_TEST_DATA):]); err == nil {
+	if nb, err := d.Decode(complete[:len(QRCodeTestData)], complete[len(QRCodeTestData):]); err == nil {
 		t.Fatal("Recovered unrecoverable error!?!")
 	} else if nb != 0 {
-		t.Fatal("Err != %d", nb)
+		t.Fatalf("Err != %d", nb)
 	}
 }
 
 func checkQR(t *testing.T, data, ecc []byte, nbErrors int) {
-	goldenData := QR_CODE_TEST_DATA
-	goldenEcc := QR_CODE_TEST_ECC
+	goldenData := QRCodeTestData
+	goldenEcc := QRCodeTestECC
 	d := NewDecoder(QR_CODE_FIELD_256)
 	errorsFound, err := d.Decode(data, ecc)
 	if err != nil {
@@ -135,8 +136,8 @@ func corrupt(received []byte, howMany int) {
 func BenchmarkDecode16_10(b *testing.B) {
 	b.StopTimer()
 	d := NewDecoder(QR_CODE_FIELD_256)
-	data := makecopy(QR_CODE_TEST_DATA)
-	ecc := makecopy(QR_CODE_TEST_ECC)
+	data := makecopy(QRCodeTestData)
+	ecc := makecopy(QRCodeTestECC)
 	b.SetBytes(int64(len(data) * b.N))
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -149,9 +150,9 @@ func BenchmarkDecode16_10(b *testing.B) {
 func BenchmarkDecode16_10With1Error(b *testing.B) {
 	b.StopTimer()
 	d := NewDecoder(QR_CODE_FIELD_256)
-	data := makecopy(QR_CODE_TEST_DATA)
+	data := makecopy(QRCodeTestData)
 	data[1] = data[1] + 1
-	ecc := makecopy(QR_CODE_TEST_ECC)
+	ecc := makecopy(QRCodeTestECC)
 	b.SetBytes(int64(len(data) * b.N))
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -163,7 +164,7 @@ func BenchmarkDecode16_10With1Error(b *testing.B) {
 
 func BenchmarkDecode128_16(b *testing.B) {
 	b.StopTimer()
-	data := makecopy(RAND_128)
+	data := makecopy(Rand128)
 	ecc := make([]byte, 16)
 	e := NewEncoder(QR_CODE_FIELD_256, len(ecc))
 	e.Encode(data, ecc)
@@ -179,7 +180,7 @@ func BenchmarkDecode128_16(b *testing.B) {
 
 func BenchmarkDecode128_16With1Error(b *testing.B) {
 	b.StopTimer()
-	data := makecopy(RAND_128)
+	data := makecopy(Rand128)
 	ecc := make([]byte, 16)
 	e := NewEncoder(QR_CODE_FIELD_256, len(ecc))
 	e.Encode(data, ecc)
@@ -196,7 +197,7 @@ func BenchmarkDecode128_16With1Error(b *testing.B) {
 
 func BenchmarkDecode128_16With2Error(b *testing.B) {
 	b.StopTimer()
-	data := makecopy(RAND_128)
+	data := makecopy(Rand128)
 	ecc := make([]byte, 16)
 	e := NewEncoder(QR_CODE_FIELD_256, len(ecc))
 	e.Encode(data, ecc)
