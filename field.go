@@ -10,7 +10,7 @@ limitations under the License. */
 package rs
 
 import (
-	"code.google.com/p/rsc/gf256"
+	"github.com/maruel/rs/internal/gf256"
 )
 
 // The Galois Field for QR codes. See http://research.swtch.com/field for more
