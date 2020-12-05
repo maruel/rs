@@ -21,11 +21,45 @@ var QRCodeField256 = NewField(0x11D, 2)
 
 // Field is a wrapper to gf256.Field so the type doesn't leak in.
 type Field struct {
-	f *gf256.Field
+	f    *gf256.Field
+	poly int
+	α    byte
 }
 
 // NewField wraps gf256.NewField(). It is safe to use the premade
 // QRCodeField256 all the time.
 func NewField(poly int, α byte) *Field {
-	return &Field{gf256.NewField(poly, int(α))}
+	return &Field{f: gf256.NewField(poly, int(α)), poly: poly, α: α}
+}
+
+func (f Field) GetPolyAlpha() (poly int, α byte) {
+	if f.poly >= 0x100 && poly <= 0x200 {
+		return f.poly, f.α
+	}
+	// guess
+	α = f.f.Exp(1)
+	for p := 0x100; p < 0x200; p++ {
+		g := newField(p, α)
+		if g == nil {
+			continue
+		}
+		ok := true
+		for i := 0; i < 255; i++ {
+			if g.f.Exp(i) != f.f.Exp(i) {
+				ok = false
+				break
+			}
+		}
+		if ok {
+			return p, α
+		}
+	}
+	return
+}
+
+func newField(poly int, α byte) (f *Field) {
+	defer func() {
+		recover()
+	}()
+	return NewField(poly, α)
 }
