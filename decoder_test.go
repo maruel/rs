@@ -29,7 +29,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/willf/bitset"
+	"github.com/bits-and-blooms/bitset"
 )
 
 // See ISO 18004, Appendix I, from which this example is taken.
