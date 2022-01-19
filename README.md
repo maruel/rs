@@ -7,6 +7,6 @@ Implements error correcting codes using Russ Cox's
 It doesn't implement interleaved data, the data is assumed to be external to the
 content.
 
-[![GoDoc](https://godoc.org/github.com/maruel/rs?status.svg)](https://godoc.org/github.com/maruel/rs)
-[![Build Status](https://travis-ci.org/maruel/rs.svg?branch=master)](https://travis-ci.org/maruel/rs)
-[![Coverage Status](https://img.shields.io/coveralls/maruel/rs.svg)](https://coveralls.io/r/maruel/rs?branch=master)
+[![Go
+Reference](https://pkg.go.dev/badge/github.com/maruel/rs.svg)](https://pkg.go.dev/github.com/maruel/rs)
+[![codecov](https://codecov.io/gh/maruel/rs/branch/main/graph/badge.svg?token=okybJn72OX)](https://codecov.io/gh/maruel/rs)
