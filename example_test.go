@@ -7,17 +7,19 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing permissions and
 limitations under the License. */
 
-package rs
+package rs_test
 
 import (
 	"fmt"
+
+	"github.com/maruel/rs"
 )
 
-func ExampleNewEncode() {
+func ExampleNewEncoder() {
 	data := []byte("hello, world")
 	fmt.Printf("Original data: %s\n", data)
 	ecc := make([]byte, 2)
-	e := NewEncoder(QRCodeField256, len(ecc))
+	e := rs.NewEncoder(rs.QRCodeField256, len(ecc))
 	e.Encode(data, ecc)
 	fmt.Printf("ECC bytes: %v\n", ecc)
 	// Output:
@@ -25,11 +27,11 @@ func ExampleNewEncode() {
 	// ECC bytes: [171 167]
 }
 
-func ExampleNewDecode() {
+func ExampleNewDecoder() {
 	data := []byte("hello, wXrld")
 	ecc := []byte{171, 167}
 	fmt.Printf("Corrupted data: %s\n", data)
-	d := NewDecoder(QRCodeField256)
+	d := rs.NewDecoder(rs.QRCodeField256)
 	if nb, err := d.Decode(data, ecc); err != nil || nb != 1 {
 		fmt.Printf("Expected 1 fix, for %d. Error: %s\n", nb, err)
 	}
