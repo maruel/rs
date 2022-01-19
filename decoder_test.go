@@ -8,7 +8,7 @@ or implied. See the License for the specific language governing permissions and
 limitations under the License. */
 
 // Original source:
-// https://code.google.com/p/zxing/source/browse/trunk/core/test/src/com/google/zxing/common/reedsolomon/ReedSolomonDecoderQRCodeTestCase.java
+// https://github.com/zxing/zxing/tree/master/core/src/test/java/com/google/zxing/common/reedsolomon
 //
 // Copyright 2008 ZXing authors
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -119,7 +119,6 @@ func checkQR(t *testing.T, data, ecc []byte, nbErrors int) {
 	compare(t, ecc, goldenEcc, "ECC differs")
 }
 
-// https://code.google.com/p/zxing/source/browse/trunk/core/test/src/com/google/zxing/common/reedsolomon/AbstractReedSolomonTestCase.java
 func corrupt(received []byte, howMany int) {
 	corrupted := bitset.New(uint(len(received)))
 	for j := 0; j < howMany; j++ {
