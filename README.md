@@ -1,7 +1,8 @@
 Reed-Solomon ECC in Go
 ----------------------
 
-Implements error correcting codes using Russ Cox's gf256 library.
+Implements error correcting codes using Russ Cox's
+[rsc.io/qr/gf256](https://rsc.io/qr/gf256) library.
 
 It doesn't implement interleaved data, the data is assumed to be external to the
 content.

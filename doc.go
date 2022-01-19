@@ -16,7 +16,7 @@ limitations under the License. */
 // code are an indirect port of their Java or C++ Reed-Solomon implementations.
 //
 // Parts of ZXing's implementation have been replaced by Russ Cox's gf256
-// library. Source: https://github.com/rsc/qr
+// library https://rsc.io/qr/gf256.
 package rs
 
 // BUG(maruel): It's far from complete. It can't accept total buffer size of
